@@ -90,11 +90,11 @@ if subnet_data and "data" in subnet_data:
 
     df = pd.DataFrame(rows)
     df = df.sort_values("Emission", ascending=False).reset_index(drop=True)
-
+    st.caption(f"Showing all {len(df)} subnets — scroll to see more ↓")
     st.dataframe(
         df,
         use_container_width=True,
-        height=600,
+        height=800,
         column_config={
             "Emission": st.column_config.NumberColumn(format="%.3f%%"),
         }
