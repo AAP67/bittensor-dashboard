@@ -97,9 +97,9 @@ if subnet_data and "data" in subnet_data:
         height=600,
         column_config={
             "Emission": st.column_config.NumberColumn(format="%.3f%%"),
-            "TAO Flow (1d)": st.column_config.NumberColumn(format="%.2f τ"),
-            "TAO Flow (7d)": st.column_config.NumberColumn(format="%.2f τ"),
-            "TAO Flow (30d)": st.column_config.NumberColumn(format="%.2f τ"),
+            "TAO Flow (1d)": st.column_config.NumberColumn(format="%,.2f τ"),
+            "TAO Flow (7d)": st.column_config.NumberColumn(format="%,.2f τ"),
+            "TAO Flow (30d)": st.column_config.NumberColumn(format="%,.2f τ"),
         }
     )
 else:
