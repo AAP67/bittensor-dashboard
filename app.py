@@ -83,3 +83,29 @@ if subnet_data and "data" in subnet_data:
     )
 else:
     st.error("Could not fetch subnet data")
+    # --- AI Chat ---
+st.divider()
+st.subheader("🤖 Ask Anything About Bittensor")
+
+question = st.chat_input("e.g. Which subnets had the most TAO inflow today?")
+
+if question:
+    from utils.ai_chat import get_response
+    import json
+    
+    # Package live data for Claude
+    live_data = {
+        "tao_price": price_data["data"][0] if price_data else {},
+        "network_stats": stats_data["data"][0] if stats_data else {},
+        "subnets": df.to_dict(orient="records") if subnet_data else [],
+    }
+    
+    ANTHROPIC_KEY = st.secrets.get("ANTHROPIC_API_KEY", "")
+    
+    with st.chat_message("user"):
+        st.write(question)
+    
+    with st.chat_message("assistant"):
+        with st.spinner("Analyzing..."):
+            answer = get_response(question, json.dumps(live_data, default=str), ANTHROPIC_KEY)
+            st.write(answer)
