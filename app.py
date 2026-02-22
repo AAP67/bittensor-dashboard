@@ -83,13 +83,13 @@ if subnet_data and "data" in subnet_data:
             "Validators": s.get("active_validators", 0),
             "Miners": s.get("active_miners", 0),
             "Emission": round(emission_pct, 3),
-            "TAO Flow (1d)": round(float(s.get("net_flow_1_day", 0)) / 1e9, 2),
-            "TAO Flow (7d)": round(float(s.get("net_flow_7_days", 0)) / 1e9, 2),
-            "TAO Flow (30d)": round(float(s.get("net_flow_30_days", 0)) / 1e9, 2),
+            "TAO Flow (1d)": f"{float(s.get('net_flow_1_day', 0)) / 1e9:,.2f} τ",
+            "TAO Flow (7d)": f"{float(s.get('net_flow_7_days', 0)) / 1e9:,.2f} τ",
+            "TAO Flow (30d)": f"{float(s.get('net_flow_30_days', 0)) / 1e9:,.2f} τ",
         })
 
     df = pd.DataFrame(rows)
-    df = df.sort_values("TAO Flow (1d)", ascending=False).reset_index(drop=True)
+    df = df.sort_values("Emission", ascending=False).reset_index(drop=True)
 
     st.dataframe(
         df,
@@ -97,9 +97,6 @@ if subnet_data and "data" in subnet_data:
         height=600,
         column_config={
             "Emission": st.column_config.NumberColumn(format="%.3f%%"),
-            "TAO Flow (1d)": st.column_config.NumberColumn(format="%,.2f τ"),
-            "TAO Flow (7d)": st.column_config.NumberColumn(format="%,.2f τ"),
-            "TAO Flow (30d)": st.column_config.NumberColumn(format="%,.2f τ"),
         }
     )
 else:
