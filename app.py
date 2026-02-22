@@ -1,5 +1,85 @@
 import streamlit as st
+import pandas as pd
+from utils.chain_data import get_stats, get_tao_price, get_subnets, get_tao_flow, get_subnet_identity
 
 st.set_page_config(page_title="Bittensor Explorer", layout="wide")
 st.title("🧠 Bittensor Ecosystem Explorer")
-st.write("Your AI-powered dashboard for everything Bittensor.")
+
+API_KEY = st.secrets.get("TAOSTATS_API_KEY", "")
+
+# --- Fetch all data ---
+price_data = get_tao_price(API_KEY)
+stats_data = get_stats(API_KEY)
+subnet_data = get_subnets(API_KEY)
+identity_data = get_subnet_identity(API_KEY)
+
+# --- TIER 1: Market Overview ---
+if price_data and stats_data:
+    price = price_data["data"][0]
+    stats = stats_data["data"][0]
+
+    issued = int(float(stats["issued"])) / 1e9
+    staked = int(float(stats["staked"])) / 1e9
+    staking_ratio = (staked / issued) * 100
+
+    st.subheader("📊 Market Overview")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("TAO Price", f"${float(price['price']):,.2f}", f"{float(price['percent_change_24h']):.2f}% (24h)")
+    c2.metric("Market Cap", f"${float(price['market_cap']):,.0f}")
+    c3.metric("24h Volume", f"${float(price['volume_24h']):,.0f}")
+    c4.metric("Staking Ratio", f"{staking_ratio:.1f}%")
+
+    c5, c6, c7, c8 = st.columns(4)
+    c5.metric("Subnets", stats["subnets"])
+    c6.metric("Accounts", f"{stats['accounts']:,}")
+    c7.metric("7d Change", f"{float(price['percent_change_7d']):.2f}%")
+    c8.metric("30d Change", f"{float(price['percent_change_30d']):.2f}%")
+
+    st.divider()
+
+# --- Build subnet name lookup ---
+name_map = {}
+if identity_data and "data" in identity_data:
+    for item in identity_data["data"]:
+        nid = item.get("netuid")
+        name = item.get("subnet_name") or item.get("name", "")
+        if nid is not None:
+            name_map[nid] = name
+
+# --- TIER 2: Subnet Table ---
+if subnet_data and "data" in subnet_data:
+    st.subheader("🔗 Subnet Overview")
+
+    rows = []
+    for s in subnet_data["data"]:
+        nid = s.get("netuid", 0)
+        emission_raw = float(s.get("emission", 0))
+        emission_pct = emission_raw / 1e9 * 100 if emission_raw > 1 else emission_raw * 100
+
+        rows.append({
+            "NetUID": nid,
+            "Name": name_map.get(nid, f"Subnet {nid}"),
+            "Validators": s.get("active_validators", 0),
+            "Miners": s.get("active_miners", 0),
+            "Emission": round(emission_pct, 3),
+            "TAO Flow (1d)": round(float(s.get("net_flow_1_day", 0)) / 1e9, 2),
+            "TAO Flow (7d)": round(float(s.get("net_flow_7_days", 0)) / 1e9, 2),
+            "TAO Flow (30d)": round(float(s.get("net_flow_30_days", 0)) / 1e9, 2),
+        })
+
+    df = pd.DataFrame(rows)
+    df = df.sort_values("TAO Flow (1d)", ascending=False).reset_index(drop=True)
+
+    st.dataframe(
+        df,
+        use_container_width=True,
+        height=600,
+        column_config={
+            "Emission": st.column_config.NumberColumn(format="%.3f%%"),
+            "TAO Flow (1d)": st.column_config.NumberColumn(format="%.2f τ"),
+            "TAO Flow (7d)": st.column_config.NumberColumn(format="%.2f τ"),
+            "TAO Flow (30d)": st.column_config.NumberColumn(format="%.2f τ"),
+        }
+    )
+else:
+    st.error("Could not fetch subnet data")
