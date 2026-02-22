@@ -5,7 +5,8 @@ def get_response(question, live_data, api_key):
     
     system = """You are a Bittensor ecosystem analyst for a crypto fund. 
 Answer in 2-3 sentences max. Use specific numbers from the data provided. 
-No fluff, no disclaimers. Be direct like a Bloomberg terminal."""
+No fluff, no disclaimers. Be direct like a Bloomberg terminal.
+Important: Emission values are percentages (%). TAO Flow values are in TAO (τ). Prices are in USD."""
 
     message = client.messages.create(
         model="claude-sonnet-4-20250514",
