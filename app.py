@@ -1,17 +1,37 @@
 import streamlit as st
 import pandas as pd
-from utils.chain_data import get_stats, get_tao_price, get_subnets, get_tao_flow, get_subnet_identity
+import json
+import time
 
 st.set_page_config(page_title="Bittensor Explorer", layout="wide")
 st.title("🧠 Bittensor Ecosystem Explorer")
 
 API_KEY = st.secrets.get("TAOSTATS_API_KEY", "")
 
-# --- Fetch all data ---
-price_data = get_tao_price(API_KEY)
-stats_data = get_stats(API_KEY)
-subnet_data = get_subnets(API_KEY)
-identity_data = get_subnet_identity(API_KEY)
+@st.cache_data(ttl=300)
+def fetch_all_data(api_key):
+    from utils.chain_data import get_stats, get_tao_price, get_subnets, get_subnet_identity
+    
+    price = get_tao_price(api_key)
+    time.sleep(1)
+    stats = get_stats(api_key)
+    time.sleep(1)
+    subnets = get_subnets(api_key)
+    time.sleep(1)
+    identity = get_subnet_identity(api_key)
+    
+    return {
+        "price": price,
+        "stats": stats,
+        "subnets": subnets,
+        "identity": identity,
+    }
+
+data = fetch_all_data(API_KEY)
+price_data = data["price"]
+stats_data = data["stats"]
+subnet_data = data["subnets"]
+identity_data = data["identity"]
 
 # --- TIER 1: Market Overview ---
 if price_data and stats_data:
@@ -47,6 +67,7 @@ if identity_data and "data" in identity_data:
             name_map[nid] = name
 
 # --- TIER 2: Subnet Table ---
+df = pd.DataFrame()
 if subnet_data and "data" in subnet_data:
     st.subheader("🔗 Subnet Overview")
 
@@ -83,7 +104,8 @@ if subnet_data and "data" in subnet_data:
     )
 else:
     st.error("Could not fetch subnet data")
-    # --- AI Chat ---
+
+# --- AI Chat ---
 st.divider()
 st.subheader("🤖 Ask Anything About Bittensor")
 
@@ -91,20 +113,18 @@ question = st.chat_input("e.g. Which subnets had the most TAO inflow today?")
 
 if question:
     from utils.ai_chat import get_response
-    import json
-    
-    # Package live data for Claude
+
     live_data = {
         "tao_price": price_data["data"][0] if price_data else {},
         "network_stats": stats_data["data"][0] if stats_data else {},
-        "subnets": df.to_dict(orient="records") if subnet_data else [],
+        "subnets": df.to_dict(orient="records") if not df.empty else [],
     }
-    
+
     ANTHROPIC_KEY = st.secrets.get("ANTHROPIC_API_KEY", "")
-    
+
     with st.chat_message("user"):
         st.write(question)
-    
+
     with st.chat_message("assistant"):
         with st.spinner("Analyzing..."):
             answer = get_response(question, json.dumps(live_data, default=str), ANTHROPIC_KEY)
