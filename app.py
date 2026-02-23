@@ -94,6 +94,15 @@ if subnet_data and "data" in subnet_data:
             "Emission": st.column_config.NumberColumn(format="%.3f%%"),
         }
     )
+    # --- Charts ---
+    import plotly.express as px
+
+    st.subheader("📈 Top 10 Subnets by Emission")
+    top_emission = df.nlargest(10, "Emission")
+    fig1 = px.bar(top_emission, x="Emission", y="Name", orientation="h",
+                  color="Emission", color_continuous_scale="Blues")
+    fig1.update_layout(yaxis=dict(autorange="reversed"), height=400)
+    st.plotly_chart(fig1, use_container_width=True)
 else:
     st.error("Could not fetch subnet data")
 
