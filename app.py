@@ -44,17 +44,16 @@ if price_data and stats_data:
     staking_ratio = (staked / issued) * 100
 
     st.subheader("📊 Market Overview")
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("TAO Price", f"${float(price['price']):,.2f}", f"{float(price['percent_change_24h']):.2f}% (24h)")
-    c2.metric("Market Cap", f"${float(price['market_cap']):,.0f}")
-    c3.metric("24h Volume", f"${float(price['volume_24h']):,.0f}")
-    c4.metric("Staking Ratio", f"{staking_ratio:.1f}%")
+    c1.metric("TAO Price", f"${float(price['price']):,.2f}", f"{float(price['percent_change_24h']):.2f}% (24h)", help="Current market price of TAO token in USD")
+    c2.metric("Market Cap", f"${float(price['market_cap']):,.0f}", help="Total value of all circulating TAO tokens (Price × Circulating Supply)")
+    c3.metric("24h Volume", f"${float(price['volume_24h']):,.0f}", help="Total USD value of TAO traded in the last 24 hours")
+    c4.metric("Staking Ratio", f"{staking_ratio:.1f}%", help="Percentage of total issued TAO that is staked across subnets and root")
 
     c5, c6, c7, c8 = st.columns(4)
-    c5.metric("Subnets", stats["subnets"])
-    c6.metric("Accounts", f"{stats['accounts']:,}")
-    c7.metric("7d Change", f"{float(price['percent_change_7d']):.2f}%")
-    c8.metric("30d Change", f"{float(price['percent_change_30d']):.2f}%")
+    c5.metric("Subnets", stats["subnets"], help="Total number of active subnets on the Bittensor network")
+    c6.metric("Accounts", f"{stats['accounts']:,}", help="Total unique wallet addresses on the network")
+    c7.metric("7d Change", f"{float(price['percent_change_7d']):.2f}%", help="TAO price change over the last 7 days")
+    c8.metric("30d Change", f"{float(price['percent_change_30d']):.2f}%", help="TAO price change over the last 30 days")
 
     st.divider()
 
@@ -91,7 +90,14 @@ if subnet_data and "data" in subnet_data:
         use_container_width=True,
         height=800,
         column_config={
-            "Emission": st.column_config.NumberColumn(format="%.3f%%"),
+            "NetUID": st.column_config.NumberColumn(help="Unique identifier for each subnet"),
+            "Name": st.column_config.TextColumn(help="Subnet name registered on-chain"),
+            "Validators": st.column_config.NumberColumn(help="Active validators verifying miner output and setting weights"),
+            "Miners": st.column_config.NumberColumn(help="Active miners performing the subnet's task"),
+            "Emission": st.column_config.NumberColumn(format="%.3f%%", help="% of TAO emitted into this subnet's pool each block"),
+            "TAO Flow (1d)": st.column_config.TextColumn(help="Net TAO flowing in/out of subnet pool in last 24h. Positive = inflow"),
+            "TAO Flow (7d)": st.column_config.TextColumn(help="Net TAO flow over last 7 days"),
+            "TAO Flow (30d)": st.column_config.TextColumn(help="Net TAO flow over last 30 days"),
         }
     )
     # --- Charts ---
