@@ -44,6 +44,13 @@ if price_data and stats_data:
     staking_ratio = (staked / issued) * 100
 
     st.subheader("📊 Market Overview")
+    c1, c2, c3, c4 = st.columns(4)
+    tao_price = float(price["price"])
+    market_cap = float(price["market_cap"])
+    volume_24h = float(price["volume_24h"])
+    change_24h = float(price["percent_change_24h"])
+    change_7d = float(price["percent_change_7d"])
+    change_30d = float(price["percent_change_30d"])
     c1.metric("TAO Price", f"${float(price['price']):,.2f}", f"{float(price['percent_change_24h']):.2f}% (24h)", help="Current market price of TAO token in USD")
     c2.metric("Market Cap", f"${float(price['market_cap']):,.0f}", help="Total value of all circulating TAO tokens (Price × Circulating Supply)")
     c3.metric("24h Volume", f"${float(price['volume_24h']):,.0f}", help="Total USD value of TAO traded in the last 24 hours")
