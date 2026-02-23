@@ -101,6 +101,13 @@ else:
 st.divider()
 st.subheader("🤖 Ask Anything About Bittensor")
 
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
+
 question = st.chat_input("e.g. Which subnets had the most TAO inflow today?")
 
 if question:
@@ -114,6 +121,7 @@ if question:
 
     ANTHROPIC_KEY = st.secrets.get("ANTHROPIC_API_KEY", "")
 
+    st.session_state.messages.append({"role": "user", "content": question})
     with st.chat_message("user"):
         st.write(question)
 
@@ -121,3 +129,5 @@ if question:
         with st.spinner("Analyzing..."):
             answer = get_response(question, json.dumps(live_data, default=str), ANTHROPIC_KEY)
             st.write(answer)
+    st.session_state.messages.append({"role": "assistant", "content": answer})
+    st.rerun()
