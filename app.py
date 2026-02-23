@@ -10,7 +10,7 @@ API_KEY = st.secrets.get("TAOSTATS_API_KEY", "")
 
 @st.cache_data(ttl=300)
 def fetch_all_data(api_key):
-    from utils.chain_data import get_stats, get_tao_price, get_subnets, get_subnet_identity
+    from utils.chain_data import get_stats, get_tao_price, get_subnets
     
     price = get_tao_price(api_key)
     time.sleep(1)
@@ -18,7 +18,8 @@ def fetch_all_data(api_key):
     time.sleep(1)
     subnets = get_subnets(api_key)
     time.sleep(1)
-    identity = get_subnet_identity(api_key)
+    from utils.chain_data import get_subnet_names
+    identity = get_subnet_names()
     
     return {
         "price": price,
@@ -58,13 +59,7 @@ if price_data and stats_data:
     st.divider()
 
 # --- Build subnet name lookup ---
-name_map = {}
-if identity_data and "data" in identity_data:
-    for item in identity_data["data"]:
-        nid = item.get("netuid")
-        name = item.get("subnet_name") or item.get("name", "")
-        if nid is not None:
-            name_map[nid] = name
+name_map = identity_data if identity_data else {}
 
 # --- TIER 2: Subnet Table ---
 df = pd.DataFrame()

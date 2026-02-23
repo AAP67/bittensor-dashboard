@@ -1,4 +1,5 @@
 import requests
+import time
 
 BASE_URL = "https://api.taostats.io/api"
 
@@ -21,5 +22,12 @@ def get_subnets(api_key):
 def get_tao_flow(api_key):
     return _get("/dtao/tao_flow/v1", api_key)
 
-def get_subnet_identity(api_key):
-    return _get("/subnet_identity/latest/v1", api_key)
+def get_subnet_names():
+    try:
+        r = requests.get("https://raw.githubusercontent.com/taostat/subnets-infos/main/subnets.json")
+        if r.status_code == 200:
+            data = r.json()
+            return {int(k): v.get("name", f"Subnet {k}") for k, v in data.items()}
+    except:
+        pass
+    return {}
