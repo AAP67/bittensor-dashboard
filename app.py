@@ -10,7 +10,7 @@ API_KEY = st.secrets.get("TAOSTATS_API_KEY", "")
 
 @st.cache_data(ttl=300)
 def fetch_all_data(api_key):
-    from utils.chain_data import get_stats, get_tao_price, get_subnets
+    from utils.chain_data import get_stats, get_tao_price, get_subnets, get_subnet_names
     
     price = get_tao_price(api_key)
     time.sleep(1)
@@ -18,7 +18,6 @@ def fetch_all_data(api_key):
     time.sleep(1)
     subnets = get_subnets(api_key)
     time.sleep(1)
-    from utils.chain_data import get_subnet_names
     identity = get_subnet_names()
     
     return {
@@ -45,22 +44,24 @@ if price_data and stats_data:
 
     st.subheader("📊 Market Overview")
     c1, c2, c3, c4 = st.columns(4)
+
     tao_price = float(price["price"])
     market_cap = float(price["market_cap"])
     volume_24h = float(price["volume_24h"])
     change_24h = float(price["percent_change_24h"])
     change_7d = float(price["percent_change_7d"])
     change_30d = float(price["percent_change_30d"])
-    c1.metric("TAO Price", f"${float(price['price']):,.2f}", f"{float(price['percent_change_24h']):.2f}% (24h)", help="Current market price of TAO token in USD")
-    c2.metric("Market Cap", f"${float(price['market_cap']):,.0f}", help="Total value of all circulating TAO tokens (Price × Circulating Supply)")
-    c3.metric("24h Volume", f"${float(price['volume_24h']):,.0f}", help="Total USD value of TAO traded in the last 24 hours")
+
+    c1.metric("TAO Price", f"${tao_price:,.2f}", f"{change_24h:.2f}% (24h)", help="Current market price of TAO token in USD")
+    c2.metric("Market Cap", f"${market_cap:,.0f}", help="Total value of all circulating TAO tokens (Price x Circulating Supply)")
+    c3.metric("24h Volume", f"${volume_24h:,.0f}", help="Total USD value of TAO traded in the last 24 hours")
     c4.metric("Staking Ratio", f"{staking_ratio:.1f}%", help="Percentage of total issued TAO that is staked across subnets and root")
 
     c5, c6, c7, c8 = st.columns(4)
     c5.metric("Subnets", stats["subnets"], help="Total number of active subnets on the Bittensor network")
     c6.metric("Accounts", f"{stats['accounts']:,}", help="Total unique wallet addresses on the network")
-    c7.metric("7d Change", f"{float(price['percent_change_7d']):.2f}%", help="TAO price change over the last 7 days")
-    c8.metric("30d Change", f"{float(price['percent_change_30d']):.2f}%", help="TAO price change over the last 30 days")
+    c7.metric("7d Change", f"{change_7d:.2f}%", help="TAO price change over the last 7 days")
+    c8.metric("30d Change", f"{change_30d:.2f}%", help="TAO price change over the last 30 days")
 
     st.divider()
 
@@ -91,22 +92,24 @@ if subnet_data and "data" in subnet_data:
 
     df = pd.DataFrame(rows)
     df = df.sort_values("Emission", ascending=False).reset_index(drop=True)
+
     st.caption(f"Showing all {len(df)} subnets — scroll to see more ↓")
     st.dataframe(
         df,
-        use_container_width=True,
+        width="stretch",
         height=800,
         column_config={
             "NetUID": st.column_config.NumberColumn(help="Unique identifier for each subnet"),
             "Name": st.column_config.TextColumn(help="Subnet name registered on-chain"),
             "Validators": st.column_config.NumberColumn(help="Active validators verifying miner output and setting weights"),
-            "Miners": st.column_config.NumberColumn(help="Active miners performing the subnet's task"),
-            "Emission": st.column_config.NumberColumn(format="%.3f%%", help="% of TAO emitted into this subnet's pool each block"),
+            "Miners": st.column_config.NumberColumn(help="Active miners performing the subnet task"),
+            "Emission": st.column_config.NumberColumn(format="%.3f%%", help="Percent of TAO emitted into this subnet pool each block"),
             "TAO Flow (1d)": st.column_config.TextColumn(help="Net TAO flowing in/out of subnet pool in last 24h. Positive = inflow"),
             "TAO Flow (7d)": st.column_config.TextColumn(help="Net TAO flow over last 7 days"),
             "TAO Flow (30d)": st.column_config.TextColumn(help="Net TAO flow over last 30 days"),
         }
     )
+
     # --- Charts ---
     import plotly.express as px
 
@@ -115,9 +118,10 @@ if subnet_data and "data" in subnet_data:
     fig1 = px.bar(top_emission, x="Emission", y="Name", orientation="h",
                   color="Emission", color_continuous_scale="Blues")
     fig1.update_layout(yaxis=dict(autorange="reversed"), height=400)
-    st.plotly_chart(fig1, use_container_width=True)
+    st.plotly_chart(fig1, width="stretch")
+
 else:
-    st.error("Could not fetch subnet data")
+    st.warning("⏳ Data temporarily unavailable due to API rate limits. Please refresh in 30 seconds.")
 
 # --- AI Chat ---
 st.divider()

@@ -3,11 +3,17 @@ import time
 
 BASE_URL = "https://api.taostats.io/api"
 
-def _get(endpoint, api_key, params=None):
+def _get(endpoint, api_key, params=None, retries=2):
     headers = {"Authorization": api_key}
-    response = requests.get(f"{BASE_URL}{endpoint}", headers=headers, params=params)
-    if response.status_code == 200:
-        return response.json()
+    for i in range(retries + 1):
+        response = requests.get(f"{BASE_URL}{endpoint}", headers=headers, params=params)
+        if response.status_code == 200:
+            return response.json()
+        if response.status_code == 429 and i < retries:
+            print(f"Rate limited on {endpoint} — waiting 30 seconds...")
+            time.sleep(30)
+            continue
+        break
     return None
 
 def get_stats(api_key):
