@@ -4,7 +4,7 @@
 
 Pulls live data from the Taostats API and renders market overview, subnet rankings by emission, TAO flow tracking, and a conversational AI layer that can query the dashboard data directly — built for fund-level ecosystem analysis.
 
-![Demo Screenshot](assets/demo-screenshot.png)
+![Demo Screenshot](assets/demo-screenshot_bittensor.png)
 <!-- Replace with actual screenshot -->
 
 **[View Live →](your-streamlit-url)**
